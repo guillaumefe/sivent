@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f0f0f0;
+        }
+        #main-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        h1, h2 {
+            color: #333;
+        }
+        #eventsContainer {
+            background-color: white;
+            border: 1px solid #ccc;
+            margin-bottom: 20px;
+            padding: 20px;
+            border-radius: 5px;
+            position: relative;
+        }
+        #eventsContainer::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: 20px;
+            width: 2px;
+            background-color: #ddd;
+        }
+        .event {
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            margin: 30px 0;  /* Increased margin */
+            height: 80px;  /* Fixed height */
+            position: relative;
+        }
+        .event::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 10px;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background-color: #007BFF;
+        }
+        .eventText {
+            flex: 1;
+            margin-right: 10px;
+            font-size: 16px;
+            margin-left: 40px;
+        }
+        .eventActions {
+            display: none;
+        }
+        .event:hover .eventActions {
+            display: block;
+        }
+        .eventActions span {
+            cursor: pointer;
+            color: #007BFF;
+            margin-left: 10px;
+        }
+        .deleteButton {
+            color: red;
+        }
+    </style>
+</head>
+<body>
+<div id="main-container">
+    <h1>Events</h1>
+    <div id="eventsContainer">
+        <div class="event">
+            <span class="eventText">Event 1</span>
+            <div class="eventActions">
+                <span class="addButton" onclick="addEventBefore(this)">➕</span>
+                <span class="addButton" onclick="addEventAfter(this)">➕</span>
+                <span class="editButton" onclick="editEvent(this)">✏️</span>
+                <span class="deleteButton" onclick="deleteEvent(this)">❌</span>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    const eventsContainer = document.getElementById('eventsContainer');
+
+function loadEvents() {
+    // vider eventsContainer avant de charger les événements depuis localStorage
+    eventsContainer.innerHTML = '';
+
+    const events = JSON.parse(localStorage.getItem('events'));
+
+    if (events && events.length) {
+        // Si des événements sont trouvés dans le localStorage, les charger
+        events.forEach(event => {
+            const newEvent = createElement(event);
+            eventsContainer.appendChild(newEvent);
+        });
+    } else {
+        // Si aucun événement n'est trouvé dans le localStorage, créer un événement par défaut
+        const newEvent = createElement("Default Event");
+        eventsContainer.appendChild(newEvent);
+        saveEvents();
+    }
+}
+
+
+
+    function saveEvents() {
+        const events = Array.from(eventsContainer.getElementsByClassName('eventText')).map(event => event.textContent);
+        localStorage.setItem('events', JSON.stringify(events));
+    }
+
+    function addEventBefore(element) {
+        const newEvent = createElement("New event");
+        element.parentNode.parentNode.parentNode.insertBefore(newEvent, element.parentNode.parentNode);
+        saveEvents();
+    }
+
+    function addEventAfter(element) {
+        const newEvent = createElement("New event");
+        if (element.parentNode.parentNode.nextSibling) {
+            element.parentNode.parentNode.parentNode.insertBefore(newEvent, element.parentNode.parentNode.nextSibling);
+        } else {
+            element.parentNode.parentNode.parentNode.appendChild(newEvent);
+        }
+        saveEvents();
+    }
+
+    function createElement(text) {
+        const eventContainer = document.createElement('div');
+        eventContainer.className = 'event';
+        
+        const eventText = document.createElement('span');
+        eventText.className = 'eventText';
+        eventText.textContent = text;
+        eventContainer.appendChild(eventText);
+        
+        const eventActions = document.createElement('div');
+        eventActions.className = 'eventActions';
+
+        const addBeforeBtn = document.createElement('span');
+        addBeforeBtn.className = 'addButton';
+        addBeforeBtn.textContent = '➕';
+        addBeforeBtn.onclick = function() { addEventBefore(this) };
+        eventActions.appendChild(addBeforeBtn);
+        
+        const addAfterBtn = document.createElement('span');
+        addAfterBtn.className = 'addButton';
+        addAfterBtn.textContent = '➕';
+        addAfterBtn.onclick = function() { addEventAfter(this) };
+        eventActions.appendChild(addAfterBtn);
+
+        const editBtn = document.createElement('span');
+        editBtn.className = 'editButton';
+        editBtn.textContent = '✏️';
+        editBtn.onclick = function() { editEvent(this) };
+        eventActions.appendChild(editBtn);
+
+        const deleteBtn = document.createElement('span');
+        deleteBtn.className = 'deleteButton';
+        deleteBtn.textContent = '❌';
+        deleteBtn.onclick = function() { deleteEvent(this) };
+        eventActions.appendChild(deleteBtn);
+
+        eventContainer.appendChild(eventActions);
+
+        return eventContainer;
+    }
+
+    function editEvent(element) {
+        const eventText = element.parentNode.parentNode.querySelector('.eventText');
+        const newText = prompt("Enter new event text:", eventText.textContent);
+        if (newText !== null) {
+            eventText.textContent = newText;
+            saveEvents();
+        }
+    }
+
+function deleteEvent(element) {
+    if (confirm("Are you sure you want to delete this event?")) {
+        element.parentNode.parentNode.remove();
+        saveEvents();
+        // Si tous les événements sont supprimés, ajoutez un nouvel événement par défaut
+        if (!eventsContainer.hasChildNodes()) {
+            const newEvent = createElement("Default Event");
+            eventsContainer.appendChild(newEvent);
+            saveEvents();
+        }
+    }
+}
+
+
+    window.onload = loadEvents;
+</script>
+
+</body>
+</html>
+
+
+
+
+
